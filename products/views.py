@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse, Http404
 
@@ -5,6 +7,7 @@ from .forms import ProductForm
 from .models import Product
 
 
+@login_required
 def home_view(request):
     context = {'name': 'Akshit Mithaiwala'}
     return render(request, 'index.html', context)
@@ -22,12 +25,28 @@ def product_search_view(request):
     return render(request, 'products/search.html', context)
 
 
+# def product_add_view(request):
+#     # print(request.POST)
+#     # print(request.GET)
+#     product_form = ProductForm(request.POST)
+#     # print(product_form.is_valid())
+#     if request.method == 'POST':
+#         if product_form.is_valid():
+#             title_input = product_form.cleaned_data.get('title')
+#             Product.objects.create(
+#                 title=title_input
+#             )
+#     return render(request, 'products/add.html')
+
+@staff_member_required
 def product_add_view(request):
-    print(request.POST)
-    print(request.GET)
-    product_form = ProductForm(request.POST)
-    print(product_form.is_valid())
-    return render(request, 'products/add.html')
+    product_form = ProductForm(request.POST or None)
+    # print(product_form.is_valid())
+    if product_form.is_valid():
+        data = product_form.cleaned_data
+        print(data)
+        Product.objects.create(**data)
+    return render(request, 'products/add.html', {"product_form": product_form})
 
 
 def product_details_view(request, productId):
